@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import MapView from '../components/MapView'
 
 // Temporary mock data
+// Later this will come from Ryan's Python backend.
 const employees = [
   {
     id: 1,
@@ -9,6 +11,7 @@ const employees = [
     status: 'Working',
     checkIn: '09:02 AM',
     overtime: '00:42',
+    position: [17.4485, 78.3908],
   },
   {
     id: 2,
@@ -17,6 +20,7 @@ const employees = [
     status: 'Working',
     checkIn: '08:57 AM',
     overtime: '00:18',
+    position: [17.4435, 78.3955],
   },
   {
     id: 3,
@@ -25,6 +29,7 @@ const employees = [
     status: 'Late',
     checkIn: '09:47 AM',
     overtime: '00:00',
+    position: [17.455, 78.382],
   },
   {
     id: 4,
@@ -33,6 +38,7 @@ const employees = [
     status: 'Outside',
     checkIn: '08:51 AM',
     overtime: '01:05',
+    position: [17.425, 78.405],
   },
 ]
 
@@ -43,6 +49,9 @@ const statusStyles = {
 }
 
 function ManagerDashboard() {
+  const [selectedEmployeeId, setSelectedEmployeeId] =
+    useState(null)
+
   const working = employees.filter(
     (employee) => employee.status === 'Working'
   ).length
@@ -54,6 +63,10 @@ function ManagerDashboard() {
   const outside = employees.filter(
     (employee) => employee.status === 'Outside'
   ).length
+
+  const handleEmployeeClick = (employeeId) => {
+    setSelectedEmployeeId(employeeId)
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -184,7 +197,10 @@ function ManagerDashboard() {
             </div>
 
             <div className="h-[500px]">
-              <MapView />
+              <MapView
+                employees={employees}
+                selectedEmployeeId={selectedEmployeeId}
+              />
             </div>
 
           </div>
@@ -206,76 +222,99 @@ function ManagerDashboard() {
 
             <div className="divide-y divide-slate-800">
 
-              {employees.map((employee) => (
+              {employees.map((employee) => {
 
-                <div
-                  key={employee.id}
-                  className="p-4 hover:bg-slate-800/50 transition"
-                >
+                const isSelected =
+                  selectedEmployeeId === employee.id
 
-                  <div className="flex items-center gap-3">
+                return (
+                  <button
+                    key={employee.id}
+                    onClick={() =>
+                      handleEmployeeClick(employee.id)
+                    }
+                    className={`w-full text-left p-4 transition ${
+                      isSelected
+                        ? 'bg-blue-500/10'
+                        : 'hover:bg-slate-800/50'
+                    }`}
+                  >
 
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-semibold">
-                      {employee.name.charAt(0)}
-                    </div>
+                    <div className="flex items-center gap-3">
 
-                    {/* Employee info */}
-                    <div className="flex-1 min-w-0">
+                      {/* Avatar */}
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                          isSelected
+                            ? 'bg-blue-600'
+                            : 'bg-slate-700'
+                        }`}
+                      >
+                        {employee.name.charAt(0)}
+                      </div>
 
-                      <p className="font-medium truncate">
-                        {employee.name}
-                      </p>
+                      {/* Employee info */}
+                      <div className="flex-1 min-w-0">
 
-                      <p className="text-xs text-slate-500 truncate">
-                        {employee.role}
-                      </p>
+                        <p className="font-medium truncate">
+                          {employee.name}
+                        </p>
 
-                    </div>
+                        <p className="text-xs text-slate-500 truncate">
+                          {employee.role}
+                        </p>
 
-                    {/* Status */}
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        statusStyles[employee.status]
-                      }`}
-                    >
-                      {employee.status}
-                    </span>
+                      </div>
 
-                  </div>
-
-                  {/* Attendance information */}
-                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-
-                    <div>
-
-                      <p className="text-slate-500">
-                        Check-in
-                      </p>
-
-                      <p className="text-slate-300 mt-1">
-                        {employee.checkIn}
-                      </p>
-
-                    </div>
-
-                    <div>
-
-                      <p className="text-slate-500">
-                        Overtime
-                      </p>
-
-                      <p className="text-slate-300 mt-1">
-                        {employee.overtime}
-                      </p>
+                      {/* Status */}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          statusStyles[employee.status]
+                        }`}
+                      >
+                        {employee.status}
+                      </span>
 
                     </div>
 
-                  </div>
+                    {/* Attendance information */}
+                    <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
 
-                </div>
+                      <div>
 
-              ))}
+                        <p className="text-slate-500">
+                          Check-in
+                        </p>
+
+                        <p className="text-slate-300 mt-1">
+                          {employee.checkIn}
+                        </p>
+
+                      </div>
+
+                      <div>
+
+                        <p className="text-slate-500">
+                          Overtime
+                        </p>
+
+                        <p className="text-slate-300 mt-1">
+                          {employee.overtime}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    {isSelected && (
+                      <p className="text-xs text-blue-400 mt-3">
+                        📍 Viewing on map
+                      </p>
+                    )}
+
+                  </button>
+                )
+              })}
 
             </div>
 
