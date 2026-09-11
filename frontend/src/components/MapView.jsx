@@ -3,9 +3,9 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const statusColors = {
-  Working: '#10b981',
-  Late: '#f59e0b',
-  Outside: '#ef4444',
+  Working: '#71846b',
+  Late: '#b18b49',
+  Outside: '#a96653',
 }
 
 function createEmployeeIcon(employee, selected = false) {
@@ -14,50 +14,49 @@ function createEmployeeIcon(employee, selected = false) {
     .map((word) => word[0])
     .join('')
 
-  const statusColor = statusColors[employee.status]
+  const statusColor = statusColors[employee.status] || '#71846b'
 
   return L.divIcon({
     className: 'employee-marker',
     html: `
       <div style="
         position: relative;
-        width: ${selected ? '56px' : '48px'};
-        height: ${selected ? '56px' : '48px'};
-        border-radius: 50%;
-        background: #0f172a;
-        border: ${selected ? '4px' : '3px'} solid ${statusColor};
+        width: ${selected ? '58px' : '50px'};
+        height: ${selected ? '58px' : '50px'};
+        border-radius: 18px;
+        background: #292823;
+        border: ${selected ? '3px' : '2px'} solid ${statusColor};
         box-shadow: ${
           selected
-            ? `0 0 0 5px ${statusColor}33, 0 6px 18px rgba(0,0,0,0.5)`
-            : '0 4px 12px rgba(0,0,0,0.4)'
+            ? `0 0 0 6px ${statusColor}22, 0 12px 24px rgba(71,61,45,.28)`
+            : '0 8px 18px rgba(71,61,45,.24)'
         };
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: #fffdf8;
         font-weight: 700;
-        font-size: ${selected ? '16px' : '14px'};
-        transition: all 0.2s ease;
+        font-size: ${selected ? '15px' : '13px'};
+        letter-spacing: .02em;
+        transition: all .2s ease;
       ">
         ${initials}
-
         <span style="
           position: absolute;
-          right: -2px;
-          bottom: -2px;
-          width: 13px;
-          height: 13px;
+          right: -4px;
+          bottom: -4px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
           background: ${statusColor};
-          border: 2px solid #0f172a;
+          border: 3px solid #fffdf8;
+          box-shadow: 0 2px 7px rgba(71,61,45,.2);
         "></span>
       </div>
     `,
-    iconSize: selected ? [56, 56] : [48, 48],
-    iconAnchor: selected
-      ? [28, 28]
-      : [24, 24],
-    popupAnchor: [0, selected ? -30 : -25],
+    iconSize: selected ? [58, 58] : [50, 50],
+    iconAnchor: selected ? [29, 29] : [25, 25],
+    popupAnchor: [0, selected ? -32 : -27],
   })
 }
 
@@ -65,67 +64,43 @@ function MapView({ employees, selectedEmployeeId }) {
   const mapRef = useRef(null)
   const markerRefs = useRef({})
 
-  // Create the map and markers
   useEffect(() => {
     if (mapRef.current) return
 
-    const map = L.map('geoforce-map').setView(
-      [17.4485, 78.3908],
-      13
-    )
+    const map = L.map('geoforce-map', {
+      zoomControl: false,
+      scrollWheelZoom: true,
+    }).setView([17.3850, 78.4867], 13)
 
-    L.tileLayer(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        attribution: '&copy; OpenStreetMap contributors',
-      }
-    ).addTo(map)
+    L.control.zoom({ position: 'bottomright' }).addTo(map)
 
-    // Company geofence
-    L.circle(
-      [17.4485, 78.3908],
-      {
-        radius: 1500,
-        color: '#3b82f6',
-        fillColor: '#3b82f6',
-        fillOpacity: 0.08,
-        weight: 2,
-      }
-    ).addTo(map)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map)
 
-    // Employee markers
+    L.circle([17.3850, 78.4867], {
+      radius: 200,
+      color: '#7c8c78',
+      fillColor: '#7c8c78',
+      fillOpacity: 0.09,
+      weight: 2,
+      dashArray: '7 7',
+    }).addTo(map)
+
     employees.forEach((employee) => {
-      const marker = L.marker(
-        employee.position,
-        {
-          icon: createEmployeeIcon(employee),
-        }
-      ).addTo(map)
+      const marker = L.marker(employee.position, {
+        icon: createEmployeeIcon(employee),
+      }).addTo(map)
 
       marker.bindPopup(`
-        <div style="min-width: 200px;">
-          <strong style="font-size: 15px;">
-            ${employee.name}
-          </strong>
-
-          <div style="margin-top: 4px; color: #64748b;">
-            ${employee.role}
+        <div style="min-width: 205px; padding: 4px 2px; font-family: Inter, system-ui, sans-serif;">
+          <div style="font-weight: 700; font-size: 15px; color: #292823;">${employee.name}</div>
+          <div style="margin-top: 3px; color: #777166; font-size: 12px;">${employee.role}</div>
+          <div style="margin-top: 10px; padding-top: 9px; border-top: 1px solid #e8e1d6; font-size: 12px; color: #777166;">
+            Status: <strong style="color: ${statusColors[employee.status] || '#71846b'};">${employee.status}</strong>
           </div>
-
-          <div style="margin-top: 8px;">
-            Status:
-            <strong style="color: ${statusColors[employee.status]};">
-              ${employee.status}
-            </strong>
-          </div>
-
-          <div style="margin-top: 6px; color: #64748b;">
-            Check-in: ${employee.checkIn}
-          </div>
-
-          <div style="margin-top: 4px; color: #64748b;">
-            Overtime: ${employee.overtime}
-          </div>
+          <div style="margin-top: 6px; color: #777166; font-size: 12px;">Check-in: ${employee.checkIn || '—'}</div>
+          <div style="margin-top: 5px; color: #777166; font-size: 12px;">Overtime: ${employee.overtime || '00:00'}</div>
         </div>
       `)
 
@@ -134,10 +109,7 @@ function MapView({ employees, selectedEmployeeId }) {
 
     mapRef.current = map
 
-    // Fix map sizing after the component finishes rendering
-    setTimeout(() => {
-      map.invalidateSize()
-    }, 100)
+    setTimeout(() => map.invalidateSize(), 100)
 
     return () => {
       map.remove()
@@ -146,53 +118,34 @@ function MapView({ employees, selectedEmployeeId }) {
     }
   }, [employees])
 
-  // Focus and highlight selected employee
   useEffect(() => {
     if (!mapRef.current || !selectedEmployeeId) return
 
     const employee = employees.find(
-      (employee) => employee.id === selectedEmployeeId
+      (item) => item.id === selectedEmployeeId
     )
-
     const marker = markerRefs.current[selectedEmployeeId]
 
     if (!employee || !marker) return
 
-    // Reset all markers
-    employees.forEach((employee) => {
-      const marker = markerRefs.current[employee.id]
-
-      if (marker) {
-        marker.setIcon(
-          createEmployeeIcon(employee, false)
-        )
+    employees.forEach((item) => {
+      const itemMarker = markerRefs.current[item.id]
+      if (itemMarker) {
+        itemMarker.setIcon(createEmployeeIcon(item, false))
       }
     })
 
-    // Highlight selected marker
-    marker.setIcon(
-      createEmployeeIcon(employee, true)
-    )
+    marker.setIcon(createEmployeeIcon(employee, true))
 
-    // Move map to employee
-    mapRef.current.flyTo(
-      employee.position,
-      15,
-      {
-        duration: 0.8,
-      }
-    )
+    mapRef.current.flyTo(employee.position, 15, {
+      duration: 0.8,
+      easeLinearity: 0.25,
+    })
 
-    // Open employee popup
     marker.openPopup()
   }, [selectedEmployeeId, employees])
 
-  return (
-    <div
-      id="geoforce-map"
-      className="h-full w-full"
-    />
-  )
+  return <div id="geoforce-map" className="h-full w-full" />
 }
 
 export default MapView
