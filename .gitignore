@@ -1,0 +1,5 @@
+backend/firebase-service-account.json
+venv/
+__pycache__/
+*.pyc
+backend/firebase-service-account.json
